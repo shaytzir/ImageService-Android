@@ -5,12 +5,21 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageService extends Service {
     private BroadcastReceiver myReceiver;
@@ -37,8 +46,7 @@ public class ImageService extends Service {
                         if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
                             showSuccessfulBroadcast();
                             //Starting the Transfer
-                            TcpClient client = new TcpClient();
-                            client.StartTcpClient();
+                            sendImages();
                         }
                     }
                 }
@@ -57,4 +65,47 @@ public class ImageService extends Service {
     private void showSuccessfulBroadcast() {
         Toast.makeText(this, "There is a wifi connection", Toast.LENGTH_LONG).show();
     }
+
+    private void sendImages() {
+        final List<File> images = getDCIMimages();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                TcpClient client = new TcpClient();
+                for(File image:images) {
+                    client.SendInfoToServer(image);
+                }
+            }
+        }).start();
+
+    }
+
+    private List<File> getDCIMimages() {
+        List<File> images = new ArrayList<File>();
+        // Getting the Camera Folder
+        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"Camera");
+        if (dcim == null) {
+            return null;
+            //return all photos in DCIM
+        }
+        extractRecursively(dcim,images);
+        return  images;
+    }
+
+    private void extractRecursively(File dcim,List<File> images) {
+        File[] files = dcim.listFiles();
+        if (files!=null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    //the list returns suppose to contain only images - not directories!
+                    extractRecursively(file, images);
+                    //debug should we change the else to check it?
+                } else {
+                    images.add(file);
+                }
+            }
+        }
+
+    }
+
 }
