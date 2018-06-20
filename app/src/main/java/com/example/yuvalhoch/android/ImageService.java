@@ -1,5 +1,6 @@
 package com.example.yuvalhoch.android;
 
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,6 +14,8 @@ import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -68,16 +71,45 @@ public class ImageService extends Service {
 
     private void sendImages() {
         final List<File> images = getDCIMimages();
+        final int notify_id = 1;
+        final NotificationManagerCompat NM = NotificationManagerCompat.from(this);
+        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+        mBuilder.setContentTitle("Picture Transfer").setContentText("Transfer in progress").setSmallIcon(R.mipmap.ic_launcher).setPriority(NotificationCompat.PRIORITY_LOW);
+        mBuilder.setProgress(100, 0, false);
+        NM.notify(notify_id, mBuilder.build());
         new Thread(new Runnable() {
             @Override
             public void run() {
+                int i = 1, inc = 1, j;
+                if (images.size() != 0) {
+                    inc =  100/images.size();
+                }
                 TcpClient client = new TcpClient();
                 for(File image:images) {
                     client.SendInfoToServer(image);
+                    j = i * inc;
+                    mBuilder.setProgress(100, j, false);
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    i++;
+                    try {
+                        NM.notify(notify_id, mBuilder.build());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                // At the End
+                mBuilder.setContentText("Download complete").setProgress(0, 0, false);
+                try {
+                    NM.notify(notify_id, mBuilder.build());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }).start();
-
     }
 
     private List<File> getDCIMimages() {
