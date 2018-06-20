@@ -1,5 +1,6 @@
 package com.example.yuvalhoch.android;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -11,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -72,9 +74,20 @@ public class ImageService extends Service {
     private void sendImages() {
         final List<File> images = getDCIMimages();
         final int notify_id = 1;
-        final NotificationManagerCompat NM = NotificationManagerCompat.from(this);
-        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
-        mBuilder.setContentTitle("Picture Transfer").setContentText("Transfer in progress").setSmallIcon(R.mipmap.ic_launcher).setPriority(NotificationCompat.PRIORITY_LOW);
+       // final NotificationManagerCompat NM = NotificationManagerCompat.from(this);
+
+
+        final NotificationManager NM = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        //final NotificationChannel channel;
+        // Creating a channel if api is 26 or higher
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel channel =
+                    new NotificationChannel("default", "default", NotificationManager.IMPORTANCE_DEFAULT);
+            NM.createNotificationChannel(channel);
+        }
+       final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+        mBuilder.setContentTitle("Picture Transfer").setContentText("Transfer in progress").
+                setSmallIcon(R.mipmap.ic_launcher).setPriority(NotificationCompat.PRIORITY_LOW);
         mBuilder.setProgress(100, 0, false);
         NM.notify(notify_id, mBuilder.build());
         new Thread(new Runnable() {
@@ -89,11 +102,11 @@ public class ImageService extends Service {
                     client.SendInfoToServer(image);
                     j = i * inc;
                     mBuilder.setProgress(100, j, false);
-                    try {
+                    /*try {
                         Thread.sleep(3000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                    }
+                    }*/
                     i++;
                     try {
                         NM.notify(notify_id, mBuilder.build());

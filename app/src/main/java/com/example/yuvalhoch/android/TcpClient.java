@@ -58,5 +58,13 @@ class TcpClient {
         return stream.toByteArray();
     }
 
+    public void closeConnection() {
+        try {
+            this.out.close();
+            this.input.close();
+            this.socket.close();
+        }catch (Exception e) {}
+    }
+
 
 }
