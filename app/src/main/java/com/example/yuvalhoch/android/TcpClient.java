@@ -12,8 +12,11 @@ class TcpClient {
     private Socket socket;
     private OutputStream out;
     private InputStream input;
+
+    /**
+     * constructor
+     */
     TcpClient() {
-        //String modifiedSentence;
         BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         try {
             InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
@@ -25,39 +28,45 @@ class TcpClient {
         }
     }
 
+    /**
+     * send given image to the server
+     * @param image an image
+     */
     public void SendInfoToServer(File image) {
         try {
             FileInputStream fis = new FileInputStream(image);
             Bitmap bm = BitmapFactory.decodeStream(fis);
             byte[] imageBytes = getBytesFromBitmap(bm);
-
+            //send the number of bytes of the given image and it's name
             String numBytes = String.valueOf(imageBytes.length);
             String name  = image.getName();
             String info = numBytes + " " +image.getName();
             out.write(info.getBytes(),0, info.getBytes().length);
             out.flush();
+            //waiting for confirmation from the server
             byte[] confirm = new byte[1];
             int readConfirm = input.read(confirm,0,confirm.length);
             if (confirm[0] == 1) {
                 out.write(imageBytes,0,imageBytes.length);
                 out.flush();
             }
-         //   out.flush();
-            /*Thread.sleep(5000);
-            out.write(imageBytes,0,imageBytes.length);
-            out.flush();*/
-        } catch (Exception e) {
-            String problem = "debug shit";
-
-        }
+        } catch (Exception e) {}
     }
 
+    /**
+     * reading the byets into array
+     * @param bitmap input
+     * @return a bytes array of the given bitmap
+     */
     public byte[] getBytesFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
         return stream.toByteArray();
     }
 
+    /**
+     * closes the connection
+     */
     public void closeConnection() {
         try {
             this.out.close();

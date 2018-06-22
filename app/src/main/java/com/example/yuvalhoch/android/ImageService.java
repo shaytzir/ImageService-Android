@@ -74,11 +74,7 @@ public class ImageService extends Service {
     private void sendImages() {
         final List<File> images = getDCIMimages();
         final int notify_id = 1;
-       // final NotificationManagerCompat NM = NotificationManagerCompat.from(this);
-
-
         final NotificationManager NM = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        //final NotificationChannel channel;
         // Creating a channel if api is 26 or higher
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel channel =
@@ -90,6 +86,7 @@ public class ImageService extends Service {
                 setSmallIcon(R.mipmap.ic_launcher).setPriority(NotificationCompat.PRIORITY_LOW);
         mBuilder.setProgress(100, 0, false);
         NM.notify(notify_id, mBuilder.build());
+        //start sending images and updating the progress bar
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -102,11 +99,6 @@ public class ImageService extends Service {
                     client.SendInfoToServer(image);
                     j = i * inc;
                     mBuilder.setProgress(100, j, false);
-                    /*try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
                     i++;
                     try {
                         NM.notify(notify_id, mBuilder.build());
@@ -114,7 +106,7 @@ public class ImageService extends Service {
                         e.printStackTrace();
                     }
                 }
-                // At the End
+                // At the End of the transformation
                 mBuilder.setContentText("Download complete").setProgress(0, 0, false);
                 try {
                     NM.notify(notify_id, mBuilder.build());
@@ -125,18 +117,27 @@ public class ImageService extends Service {
         }).start();
     }
 
+    /**
+     * gets all files in the dcim into list
+     * @return list of all files in dcim directory
+     */
     private List<File> getDCIMimages() {
         List<File> images = new ArrayList<File>();
         // Getting the Camera Folder
         File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"Camera");
         if (dcim == null) {
             return null;
-            //return all photos in DCIM
         }
+        //extract the files in recursion way
         extractRecursively(dcim,images);
         return  images;
     }
 
+    /**
+     * looping over the dcim directory in a recursion way
+     * @param dcim DCIM
+     * @param images list to fill
+     */
     private void extractRecursively(File dcim,List<File> images) {
         File[] files = dcim.listFiles();
         if (files!=null) {
@@ -144,7 +145,6 @@ public class ImageService extends Service {
                 if (file.isDirectory()) {
                     //the list returns suppose to contain only images - not directories!
                     extractRecursively(file, images);
-                    //debug should we change the else to check it?
                 } else {
                     images.add(file);
                 }

@@ -45,25 +45,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    /*public void DisplayNotification(View view) {
-        final int notify_id = 1;
-        builder.setSmallIcon(R.drawable.ic_launcher_background);
-        try {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    int i;
-                    for(i = 0; i < 100; i+=5) {
-                        builder.setProgress(100, i, false);
-                    }
-                }
-            }).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        //if theres a need to ask for the storage permission
         int storagePermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
         if (storagePermission == PackageManager.PERMISSION_GRANTED) {
             finish();
